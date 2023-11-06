@@ -318,7 +318,7 @@ func traversalFieldType(fields []*protogen.Field, prefix string, outputMap map[s
 		} else {
 			// 做一下约束，否则太多字段生成。
 			// 1、要排除时间类型的格式举例：solicitCars.store.updateTime.seconds int64
-			if field.Desc.Kind() == protoreflect.Int64Kind && !strings.Contains(filedKey, "seconds") {
+			if field.Desc.Kind() == protoreflect.Int64Kind && !strings.Contains(filedKey, ".seconds") {
 				outputMap[filedKey] = field.Desc.Kind().String()
 			}
 		}
