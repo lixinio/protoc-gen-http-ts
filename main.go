@@ -186,6 +186,23 @@ func (protoMessage *ProtoMessage) GenerateGeneralServiceClass() []string {
 	var code = []string{
 		"export type GeneralRequest = <TReq, TResp>(cmd: string, payload: TReq, options?: any) => Promise<TResp>;",
 		"export type IFormatFn = <TResp>(res: Record<string, any>, config: Record<string, any>) => TResp;",
+		"// 统一响应类型约束",
+		"export type INormalizeResponse<T extends Record<string, any>> = {",
+		"  code: number;",
+		"  message: string;",
+		"  data: T",
+		"  metadata?: {",
+		"    err_detail?: string",
+		"  }",
+		"}",
+		"",
+		"// 响应数据包裹一层，保留 code、message、data 的结构。",
+		"export const normalizeResponseFn = <T extends Record<string, any>>(data: T): INormalizeResponse<T> => ({",
+		"  code: 0,",
+		"  message: \"ok\",",
+		"  data,",
+		"})",
+		"",
 		"",
 		"export class GeneralClass {",
 		"  generalRequestMethod: GeneralRequest;",
@@ -234,11 +251,11 @@ func (protoMessage *ProtoMessage) GenerateServiceClass(
 
 		// 增加注释
 		code = append(code, "  "+commentStr)
-		code = append(code, "  "+transformdName+"(payload: "+input+", options?: any): Promise<"+output+"> {")
+		code = append(code, "  "+transformdName+"(payload: "+input+", options?: any): Promise<INormalizeResponse<"+output+">> {")
 		code = append(code, "  "+filedTypeConfigStr)
 		code = append(code, "    return new Promise((resolve, reject) => {")
 		code = append(code, "      this.generalRequestMethod<"+input+", "+output+">('"+requestMethodName+"', payload, "+"options).then((res) => {")
-		code = append(code, "        resolve(this.formatFn(res,"+typeVarName+"));")
+		code = append(code, "        resolve(normalizeResponseFn<"+output+">(this.formatFn(res,"+typeVarName+")));")
 		code = append(code, "      })")
 		code = append(code, "        .catch((error) => {")
 		code = append(code, "          reject(error);")
